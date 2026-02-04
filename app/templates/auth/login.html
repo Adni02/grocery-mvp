@@ -109,21 +109,23 @@
 <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.2/firebase-ui-auth.css">
 
 <script>
-// Firebase configuration - replace with your config
+// Firebase configuration
 const firebaseConfig = {
-    // TODO: Add your Firebase config here
-    apiKey: "{{ firebase_api_key }}",
-    authDomain: "{{ firebase_auth_domain }}",
-    projectId: "{{ firebase_project_id }}",
+    apiKey: "AIzaSyAMrRL7bahOyCL2GRGGlBwtybHIdXcsKyo",
+    authDomain: "grocery-mvp-db07d.firebaseapp.com",
+    projectId: "grocery-mvp-db07d",
+    storageBucket: "grocery-mvp-db07d.firebasestorage.app",
+    messagingSenderId: "32996842593",
+    appId: "1:32996842593:web:542a0c0260f50c146ade20"
 };
 
 // Initialize Firebase
-{% if not config.DEV_MODE %}
 firebase.initializeApp(firebaseConfig);
 
 // Configure FirebaseUI
 const uiConfig = {
     signInOptions: [
+        firebase.auth.EmailAuthProvider.PROVIDER_ID,
         {
             provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
             customParameters: {
@@ -146,7 +148,6 @@ const uiConfig = {
 // Start FirebaseUI
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
 ui.start('#firebaseui-auth-container', uiConfig);
-{% endif %}
 
 async function verifyWithBackend(idToken) {
     try {
@@ -186,10 +187,6 @@ function loginPage() {
             this.phoneError = '';
             
             try {
-                {% if config.DEV_MODE %}
-                // Dev mode: Skip actual SMS
-                this.codeSent = true;
-                {% else %}
                 const phoneNumber = '+45' + this.phone.replace(/\s/g, '');
                 
                 // Use invisible reCAPTCHA
@@ -204,7 +201,6 @@ function loginPage() {
                     window.recaptchaVerifier
                 );
                 this.codeSent = true;
-                {% endif %}
             } catch (error) {
                 console.error('Error:', error);
                 this.phoneError = 'Kunne ikke sende SMS. Prøv igen.';
@@ -218,15 +214,9 @@ function loginPage() {
             this.codeError = '';
             
             try {
-                {% if config.DEV_MODE %}
-                // Dev mode: Use mock token
-                const mockToken = 'dev_phone:+45' + this.phone.replace(/\s/g, '');
-                await verifyWithBackend(mockToken);
-                {% else %}
                 const result = await this.confirmationResult.confirm(this.code);
                 const idToken = await result.user.getIdToken();
                 await verifyWithBackend(idToken);
-                {% endif %}
             } catch (error) {
                 console.error('Error:', error);
                 this.codeError = 'Forkert kode. Prøv igen.';

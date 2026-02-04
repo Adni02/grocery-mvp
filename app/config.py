@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     access_token_expire_days: int = 7
 
     # Firebase
+    firebase_project_id: str = "grocery-mvp-db07d"
     firebase_credentials_path: Optional[str] = None
 
     # App Settings
