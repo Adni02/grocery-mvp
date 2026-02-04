@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% from "components/status_badge.html" import status_badge %}
+
+{% block title %}Ordre {{ order.invoice_number or order.id[:8] }} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <a href="/orders" class="text-sm text-primary-600 hover:text-primary-700 flex items-center mb-2">
+                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Tilbage til ordrer
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">
+                Ordre {{ order.invoice_number or order.id[:8] ~ '...' }}
+            </h1>
+        </div>
+        {{ status_badge(order.status) }}
+    </div>
+    
+    <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Order Status Timeline -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Ordrestatus</h2>
+                
+                {% set statuses = ['PLACED', 'CONFIRMED', 'PACKING', 'OUT_FOR_DELIVERY', 'DELIVERED'] %}
+                {% set status_labels = {
+                    'PLACED': 'Modtaget',
+                    'CONFIRMED': 'Bekræftet',
+                    'PACKING': 'Pakkes',
+                    'OUT_FOR_DELIVERY': 'Undervejs',
+                    'DELIVERED': 'Leveret',
+                    'CANCELED': 'Annulleret'
+                } %}
+                
+                {% if order.status.value == 'CANCELED' %}
+                <div class="flex items-center p-4 bg-red-50 rounded-lg">
+                    <svg class="h-6 w-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    <div>
+                        <p class="font-medium text-red-800">Ordren er annulleret</p>
+                        {% if order.status_history %}
+                        {% set cancel_entry = order.status_history|selectattr('status.value', 'equalto', 'CANCELED')|first %}
+                        {% if cancel_entry and cancel_entry.notes %}
+                        <p class="text-sm text-red-600">{{ cancel_entry.notes }}</p>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="relative">
+                    <div class="absolute left-4 top-0 h-full w-0.5 bg-gray-200"></div>
+                    
+                    {% set current_idx = statuses.index(order.status.value) if order.status.value in statuses else -1 %}
+                    
+                    {% for status in statuses %}
+                    {% set idx = loop.index0 %}
+                    {% set is_completed = idx <= current_idx %}
+                    {% set is_current = idx == current_idx %}
+                    
+                    <div class="relative flex items-start mb-6 last:mb-0">
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full z-10
+                                    {% if is_completed %}bg-primary-600{% else %}bg-gray-200{% endif %}">
+                            {% if is_completed and not is_current %}
+                            <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            {% elif is_current %}
+                            <div class="h-3 w-3 bg-white rounded-full"></div>
+                            {% else %}
+                            <div class="h-2 w-2 bg-gray-400 rounded-full"></div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="ml-4">
+                            <p class="font-medium {% if is_completed %}text-gray-900{% else %}text-gray-400{% endif %}">
+                                {{ status_labels[status] }}
+                            </p>
+                            {% if is_completed and order.status_history %}
+                            {% set history_entry = order.status_history|selectattr('status.value', 'equalto', status)|first %}
+                            {% if history_entry %}
+                            <p class="text-sm text-gray-500">
+                                {{ history_entry.created_at.strftime('%d. %b %Y, %H:%M') }}
+                            </p>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Order Items -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h2 class="text-lg font-medium text-gray-900">Produkter</h2>
+                </div>
+                
+                <ul class="divide-y divide-gray-200">
+                    {% for item in order.items %}
+                    <li class="p-6 flex items-center">
+                        <div class="h-16 w-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            {% if item.product_snapshot.get('image_url') %}
+                            <img src="{{ item.product_snapshot.image_url }}" alt="" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center">
+                                <svg class="h-8 w-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="ml-4 flex-1">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">{{ item.product_snapshot.name }}</h3>
+                                    <p class="text-sm text-gray-500">
+                                        {{ item.quantity }} × {{ "%.2f"|format(item.price_at_purchase) }} {{ currency }}
+                                    </p>
+                                </div>
+                                <p class="font-medium text-gray-900">
+                                    {{ "%.2f"|format(item.line_total) }} {{ currency }}
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Order Summary -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Ordreoversigt</h2>
+                
+                <dl class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="text-gray-500">Subtotal</dt>
+                        <dd class="text-gray-900">{{ "%.2f"|format(order.subtotal) }} {{ currency }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-gray-500">Levering</dt>
+                        <dd class="text-gray-900">{{ "%.2f"|format(order.delivery_fee) }} {{ currency }}</dd>
+                    </div>
+                    <div class="border-t pt-2 flex justify-between text-base font-semibold">
+                        <dt class="text-gray-900">Total</dt>
+                        <dd class="text-gray-900">{{ "%.2f"|format(order.total) }} {{ currency }}</dd>
+                    </div>
+                </dl>
+                
+                <div class="mt-4 pt-4 border-t">
+                    <p class="text-sm text-gray-500">
+                        <span class="font-medium">Betaling:</span> Kontant ved levering
+                    </p>
+                </div>
+                
+                <!-- Download Invoice -->
+                <a href="/api/orders/{{ order.id }}/invoice" 
+                   target="_blank"
+                   class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Download faktura
+                </a>
+            </div>
+            
+            <!-- Delivery Address -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Leveringsadresse</h2>
+                
+                <address class="text-sm text-gray-600 not-italic">
+                    {{ order.address_snapshot.street }}
+                    {% if order.address_snapshot.building %} {{ order.address_snapshot.building }}{% endif %}<br>
+                    {% if order.address_snapshot.floor %}Etage {{ order.address_snapshot.floor }}<br>{% endif %}
+                    {% if order.address_snapshot.apartment %}Lejlighed {{ order.address_snapshot.apartment }}<br>{% endif %}
+                    {{ order.address_snapshot.postcode }} {{ order.address_snapshot.city }}
+                </address>
+                
+                {% if order.address_snapshot.instructions %}
+                <div class="mt-3 pt-3 border-t">
+                    <p class="text-sm text-gray-500">
+                        <span class="font-medium">Instruktioner:</span><br>
+                        {{ order.address_snapshot.instructions }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Order Info -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Ordredetaljer</h2>
+                
+                <dl class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="text-gray-500">Ordrenummer</dt>
+                        <dd class="text-gray-900 font-mono">{{ order.invoice_number or order.id[:8] }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-gray-500">Bestilt</dt>
+                        <dd class="text-gray-900">{{ order.created_at.strftime('%d. %b %Y, %H:%M') }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

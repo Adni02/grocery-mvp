@@ -1,0 +1,150 @@
+<!-- Cart Drawer Component -->
+<div x-show="$store.cart.isOpen" x-cloak
+     class="fixed inset-0 z-50 overflow-hidden"
+     @keydown.escape.window="$store.cart.isOpen = false">
+    
+    <!-- Backdrop -->
+    <div x-show="$store.cart.isOpen"
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="absolute inset-0 bg-gray-500 bg-opacity-75"
+         @click="$store.cart.isOpen = false">
+    </div>
+    
+    <!-- Drawer Panel -->
+    <div class="absolute inset-y-0 right-0 max-w-full flex">
+        <div x-show="$store.cart.isOpen"
+             x-transition:enter="transform transition ease-in-out duration-300"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transform transition ease-in-out duration-300"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="w-screen max-w-md">
+            
+            <div class="h-full flex flex-col bg-white shadow-xl">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-4 py-4 border-b">
+                    <h2 class="text-lg font-medium text-gray-900">
+                        Indkøbskurv
+                        <span x-show="$store.cart.itemCount > 0" 
+                              class="text-sm text-gray-500">
+                            (<span x-text="$store.cart.itemCount"></span> varer)
+                        </span>
+                    </h2>
+                    <button @click="$store.cart.isOpen = false"
+                            class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Cart Items -->
+                <div class="flex-1 overflow-y-auto px-4 py-4">
+                    <!-- Empty Cart -->
+                    <div x-show="$store.cart.items.length === 0" class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <p class="mt-4 text-gray-500">Din kurv er tom</p>
+                        <a href="/products" 
+                           @click="$store.cart.isOpen = false"
+                           class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700">
+                            Start indkøb
+                        </a>
+                    </div>
+                    
+                    <!-- Cart Items List -->
+                    <ul x-show="$store.cart.items.length > 0" class="divide-y divide-gray-200">
+                        <template x-for="item in $store.cart.items" :key="item.product_id">
+                            <li class="py-4 flex">
+                                <!-- Product Image -->
+                                <div class="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                                    <img x-show="item.image_url" 
+                                         :src="item.image_url" 
+                                         :alt="item.name"
+                                         class="w-full h-full object-cover">
+                                    <div x-show="!item.image_url" 
+                                         class="w-full h-full flex items-center justify-center">
+                                        <svg class="h-8 w-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <!-- Product Info -->
+                                <div class="ml-4 flex-1">
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <h3 class="text-sm font-medium text-gray-900" x-text="item.name"></h3>
+                                            <p class="mt-1 text-sm text-gray-500">
+                                                <span x-text="parseFloat(item.price).toFixed(2)"></span> {{ currency }}
+                                            </p>
+                                        </div>
+                                        <button @click="$store.cart.remove(item.product_id)"
+                                                class="text-gray-400 hover:text-red-500">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Quantity Controls -->
+                                    <div class="mt-2 flex items-center">
+                                        <button @click="$store.cart.updateQuantity(item.product_id, item.quantity - 1)"
+                                                class="p-1 rounded-full bg-gray-100 hover:bg-gray-200">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                            </svg>
+                                        </button>
+                                        <span class="mx-3 text-gray-700" x-text="item.quantity"></span>
+                                        <button @click="$store.cart.updateQuantity(item.product_id, item.quantity + 1)"
+                                                class="p-1 rounded-full bg-gray-100 hover:bg-gray-200">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                        </button>
+                                        <span class="ml-auto font-medium text-gray-900">
+                                            <span x-text="parseFloat(item.line_total).toFixed(2)"></span> {{ currency }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+                
+                <!-- Footer -->
+                <div x-show="$store.cart.items.length > 0" class="border-t px-4 py-4">
+                    <div class="flex justify-between text-base font-medium text-gray-900 mb-4">
+                        <p>Subtotal</p>
+                        <p>
+                            <span x-text="parseFloat($store.cart.subtotal).toFixed(2)"></span> {{ currency }}
+                        </p>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">
+                        Levering beregnes ved checkout.
+                    </p>
+                    <a href="/checkout" 
+                       @click="$store.cart.isOpen = false"
+                       class="w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-primary-600 hover:bg-primary-700">
+                        Gå til checkout
+                    </a>
+                    <a href="/cart" 
+                       @click="$store.cart.isOpen = false"
+                       class="mt-2 w-full flex justify-center items-center px-6 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50">
+                        Se fuld kurv
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

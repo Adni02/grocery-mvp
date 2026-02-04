@@ -1,0 +1,15 @@
+<!-- Order Status Badge Component -->
+{% macro status_badge(status) %}
+{% set status_config = {
+    'PLACED': {'bg': 'bg-blue-100', 'text': 'text-blue-800', 'label': 'Modtaget'},
+    'CONFIRMED': {'bg': 'bg-indigo-100', 'text': 'text-indigo-800', 'label': 'Bekræftet'},
+    'PACKING': {'bg': 'bg-yellow-100', 'text': 'text-yellow-800', 'label': 'Pakkes'},
+    'OUT_FOR_DELIVERY': {'bg': 'bg-purple-100', 'text': 'text-purple-800', 'label': 'Undervejs'},
+    'DELIVERED': {'bg': 'bg-green-100', 'text': 'text-green-800', 'label': 'Leveret'},
+    'CANCELED': {'bg': 'bg-red-100', 'text': 'text-red-800', 'label': 'Annulleret'}
+} %}
+{% set config = status_config.get(status.value if status.value else status, status_config['PLACED']) %}
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ config.bg }} {{ config.text }}">
+    {{ config.label }}
+</span>
+{% endmacro %}

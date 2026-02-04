@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Produkter{% if current_category %} - {{ current_category.name }}{% endif %} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar / Filters -->
+        <aside class="lg:w-64 flex-shrink-0">
+            <div class="bg-white rounded-lg shadow-sm p-4 sticky top-24">
+                <h3 class="font-semibold text-gray-900 mb-4">Kategorier</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="/products" 
+                           class="block px-3 py-2 rounded-lg {% if not current_category %}bg-primary-50 text-primary-700 font-medium{% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+                            Alle produkter
+                        </a>
+                    </li>
+                    {% for category in categories %}
+                    <li>
+                        <a href="/products?category={{ category.slug }}" 
+                           class="block px-3 py-2 rounded-lg {% if current_category and current_category.slug == category.slug %}bg-primary-50 text-primary-700 font-medium{% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+                            {{ category.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Header -->
+            <div class="mb-6">
+                <nav class="text-sm text-gray-500 mb-2">
+                    <a href="/" class="hover:text-primary-600">Hjem</a>
+                    <span class="mx-2">/</span>
+                    <a href="/products" class="hover:text-primary-600">Produkter</a>
+                    {% if current_category %}
+                    <span class="mx-2">/</span>
+                    <span class="text-gray-900">{{ current_category.name }}</span>
+                    {% endif %}
+                </nav>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            {% if current_category %}
+                            {{ current_category.name }}
+                            {% elif search_query %}
+                            Søgeresultater for "{{ search_query }}"
+                            {% else %}
+                            Alle produkter
+                            {% endif %}
+                        </h1>
+                        <p class="text-sm text-gray-500 mt-1">{{ total }} produkt{{ 'er' if total != 1 else '' }}</p>
+                    </div>
+                    
+                    {% if search_query %}
+                    <a href="/products" class="text-sm text-primary-600 hover:text-primary-700">
+                        Ryd søgning
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Product Grid -->
+            {% if products %}
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {% for product in products %}
+                {% include "components/product_card.html" %}
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if pages > 1 %}
+            <nav class="mt-8 flex items-center justify-center space-x-2">
+                {% if page > 1 %}
+                <a href="?page={{ page - 1 }}{% if current_category %}&category={{ current_category.slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Forrige
+                </a>
+                {% endif %}
+                
+                {% for p in range(1, pages + 1) %}
+                {% if p == page %}
+                <span class="px-4 py-2 bg-primary-600 text-white rounded-lg">{{ p }}</span>
+                {% elif p <= 3 or p >= pages - 2 or (p >= page - 1 and p <= page + 1) %}
+                <a href="?page={{ p }}{% if current_category %}&category={{ current_category.slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    {{ p }}
+                </a>
+                {% elif p == 4 or p == pages - 3 %}
+                <span class="px-2">...</span>
+                {% endif %}
+                {% endfor %}
+                
+                {% if page < pages %}
+                <a href="?page={{ page + 1 }}{% if current_category %}&category={{ current_category.slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Næste
+                </a>
+                {% endif %}
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12 bg-white rounded-lg shadow-sm">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">Ingen produkter fundet</h3>
+                <p class="mt-2 text-gray-500">
+                    {% if search_query %}
+                    Prøv en anden søgning eller gennemse vores kategorier.
+                    {% else %}
+                    Denne kategori har ingen produkter endnu.
+                    {% endif %}
+                </p>
+                <a href="/products" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700">
+                    Se alle produkter
+                </a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

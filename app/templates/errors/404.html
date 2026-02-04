@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Side ikke fundet | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center px-4">
+    <div class="text-center">
+        <h1 class="text-9xl font-bold text-primary-200">404</h1>
+        <h2 class="mt-4 text-2xl font-bold text-gray-900">Side ikke fundet</h2>
+        <p class="mt-2 text-gray-600 max-w-md mx-auto">
+            Beklager, vi kunne ikke finde den side, du leder efter. 
+            Måske er den blevet flyttet eller slettet.
+        </p>
+        <div class="mt-8 flex items-center justify-center space-x-4">
+            <a href="/" class="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
+                Gå til forsiden
+            </a>
+            <a href="/products" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                Se produkter
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

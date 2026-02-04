@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Min profil | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="profilePage()">
+    <h1 class="text-2xl font-bold text-gray-900 mb-8">Min profil</h1>
+    
+    <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- User Info -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center space-x-4">
+                    <div class="h-16 w-16 rounded-full bg-primary-100 flex items-center justify-center">
+                        <span class="text-2xl font-bold text-primary-600">
+                            {{ current_user.email[0]|upper if current_user.email else current_user.phone[0] }}
+                        </span>
+                    </div>
+                    <div>
+                        {% if current_user.email %}
+                        <p class="font-medium text-gray-900">{{ current_user.email }}</p>
+                        {% endif %}
+                        {% if current_user.phone %}
+                        <p class="text-sm text-gray-500">{{ current_user.phone }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <nav class="divide-y divide-gray-200">
+                    <a href="/orders" class="flex items-center px-6 py-4 hover:bg-gray-50">
+                        <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                        <span class="text-gray-700">Mine ordrer</span>
+                        <svg class="h-5 w-5 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <button @click="logout()" class="w-full flex items-center px-6 py-4 hover:bg-gray-50 text-left">
+                        <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        <span class="text-gray-700">Log ud</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content - Addresses -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="px-6 py-4 border-b flex items-center justify-between">
+                    <h2 class="text-lg font-medium text-gray-900">Mine adresser</h2>
+                    <a href="/profile/address/new" 
+                       class="inline-flex items-center px-3 py-1.5 border border-primary-600 text-sm font-medium rounded-lg text-primary-600 hover:bg-primary-50">
+                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Tilføj adresse
+                    </a>
+                </div>
+                
+                {% if addresses %}
+                <ul class="divide-y divide-gray-200">
+                    {% for address in addresses %}
+                    <li class="p-6 flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-1">
+                                <span class="font-medium text-gray-900">{{ address.label }}</span>
+                                {% if address.is_default %}
+                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
+                                    Standard
+                                </span>
+                                {% endif %}
+                            </div>
+                            <address class="text-sm text-gray-600 not-italic">
+                                {{ address.street }}
+                                {% if address.building %} {{ address.building }}{% endif %}<br>
+                                {% if address.floor %}Etage {{ address.floor }}, {% endif %}
+                                {% if address.apartment %}Lejlighed {{ address.apartment }}<br>{% endif %}
+                                {{ address.postcode }} {{ address.city }}
+                            </address>
+                            {% if address.instructions %}
+                            <p class="mt-1 text-sm text-gray-500 italic">
+                                "{{ address.instructions }}"
+                            </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 ml-4">
+                            {% if not address.is_default %}
+                            <button @click="setDefault('{{ address.id }}')"
+                                    class="text-sm text-gray-500 hover:text-gray-700">
+                                Gør standard
+                            </button>
+                            {% endif %}
+                            <a href="/profile/address/{{ address.id }}/edit"
+                               class="text-sm text-primary-600 hover:text-primary-700">
+                                Rediger
+                            </a>
+                            <button @click="deleteAddress('{{ address.id }}')"
+                                    class="text-sm text-red-600 hover:text-red-700">
+                                Slet
+                            </button>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="p-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <h3 class="mt-4 text-lg font-medium text-gray-900">Ingen adresser</h3>
+                    <p class="mt-2 text-gray-500">Du har ikke tilføjet nogen adresser endnu.</p>
+                    <a href="/profile/address/new"
+                       class="mt-4 inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Tilføj din første adresse
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function profilePage() {
+    return {
+        async setDefault(addressId) {
+            try {
+                const response = await fetch(`/api/addresses/${addressId}/default`, {
+                    method: 'PUT'
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Kunne ikke opdatere adresse');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Der skete en fejl');
+            }
+        },
+        
+        async deleteAddress(addressId) {
+            if (!confirm('Er du sikker på, at du vil slette denne adresse?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/addresses/${addressId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Kunne ikke slette adresse');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Der skete en fejl');
+            }
+        },
+        
+        async logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

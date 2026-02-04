@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Serverfejl | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center px-4">
+    <div class="text-center">
+        <h1 class="text-9xl font-bold text-red-200">500</h1>
+        <h2 class="mt-4 text-2xl font-bold text-gray-900">Noget gik galt</h2>
+        <p class="mt-2 text-gray-600 max-w-md mx-auto">
+            Beklager, der opstod en uventet fejl. Vi arbejder på at løse problemet. 
+            Prøv venligst igen om et øjeblik.
+        </p>
+        <div class="mt-8 flex items-center justify-center space-x-4">
+            <a href="/" class="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
+                Gå til forsiden
+            </a>
+            <button onclick="window.location.reload()" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                Prøv igen
+            </button>
+        </div>
+        <p class="mt-8 text-sm text-gray-500">
+            Hvis problemet fortsætter, kontakt os på 
+            <a href="mailto:support@example.com" class="text-primary-600 hover:underline">support@example.com</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

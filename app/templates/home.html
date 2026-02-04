@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - Friske dagligvarer leveret til døren{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                Friske dagligvarer leveret til døren
+            </h1>
+            <p class="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+                Bestil nemt online og få dine dagligvarer leveret direkte til dig i København-området. 
+                Betal kontant ved levering.
+            </p>
+            <a href="/products" 
+               class="inline-flex items-center px-8 py-3 border border-transparent text-lg font-medium rounded-lg text-primary-700 bg-white hover:bg-primary-50 transition-colors">
+                Start indkøb
+                <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Kategorier</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {% for category in categories %}
+            <a href="/products?category={{ category.slug }}" 
+               class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-primary-50 hover:ring-2 hover:ring-primary-500 transition-all">
+                {% if category.image_url %}
+                <img src="{{ category.image_url }}" alt="{{ category.name }}" class="h-16 w-16 object-contain mb-2">
+                {% else %}
+                <div class="h-16 w-16 bg-primary-100 rounded-full flex items-center justify-center mb-2">
+                    <svg class="h-8 w-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <span class="text-sm font-medium text-gray-900 text-center">{{ category.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Products Section -->
+{% if featured_products %}
+<section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Udvalgte produkter</h2>
+            <a href="/products?featured=true" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                Se alle
+                <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for product in featured_products %}
+            {% include "components/product_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- How It Works Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-gray-900 text-center mb-12">Sådan virker det</h2>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary-100 text-primary-600 mb-4">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">1. Vælg produkter</h3>
+                <p class="text-gray-600">
+                    Gennemse vores udvalg af friske dagligvarer og tilføj til din kurv.
+                </p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary-100 text-primary-600 mb-4">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">2. Angiv adresse</h3>
+                <p class="text-gray-600">
+                    Tilføj din leveringsadresse i København-området og gennemfør bestillingen.
+                </p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary-100 text-primary-600 mb-4">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">3. Modtag & betal</h3>
+                <p class="text-gray-600">
+                    Vi leverer til din dør, og du betaler kontant ved levering.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-12 bg-primary-600">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-2xl font-bold text-white mb-4">
+            Klar til at spare tid på indkøb?
+        </h2>
+        <p class="text-primary-100 mb-6">
+            Opret en konto i dag og få dine dagligvarer leveret allerede i morgen.
+        </p>
+        {% if not user %}
+        <a href="/login" 
+           class="inline-flex items-center px-6 py-3 border border-transparent text-lg font-medium rounded-lg text-primary-700 bg-white hover:bg-primary-50">
+            Kom i gang gratis
+        </a>
+        {% else %}
+        <a href="/products" 
+           class="inline-flex items-center px-6 py-3 border border-transparent text-lg font-medium rounded-lg text-primary-700 bg-white hover:bg-primary-50">
+            Start indkøb
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

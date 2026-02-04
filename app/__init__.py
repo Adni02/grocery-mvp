@@ -1,0 +1,1 @@
+"""Danish Grocery MVP Application."""
