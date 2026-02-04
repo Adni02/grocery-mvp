@@ -7,10 +7,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Optional
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models import Base, TimestampMixin
+from app.models import Base, TimestampMixin, GUID, PortableJSON
 
 if TYPE_CHECKING:
     from app.models.address import Address
@@ -51,23 +50,23 @@ class Order(Base, TimestampMixin):
     __tablename__ = "orders"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
     address_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("addresses.id", ondelete="RESTRICT"),
         nullable=False,
     )
     address_snapshot: Mapped[dict[str, Any]] = mapped_column(
-        JSONB,
+        PortableJSON,
         nullable=False,
     )
     status: Mapped[OrderStatus] = mapped_column(
@@ -121,23 +120,23 @@ class OrderItem(Base):
     __tablename__ = "order_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )
     order_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("orders.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     product_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("products.id", ondelete="RESTRICT"),
         nullable=False,
     )
     product_snapshot: Mapped[dict[str, Any]] = mapped_column(
-        JSONB,
+        PortableJSON,
         nullable=False,
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -164,7 +163,7 @@ class OrderStatusHistory(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     order_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("orders.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -174,7 +173,7 @@ class OrderStatusHistory(Base):
         nullable=False,
     )
     changed_by: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -199,7 +198,7 @@ class Invoice(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     order_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("orders.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,

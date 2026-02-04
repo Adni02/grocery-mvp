@@ -269,6 +269,7 @@ async def new_address_page(
 
 
 @router.get("/login", response_class=HTMLResponse)
+@router.get("/auth/login", response_class=HTMLResponse)
 async def login_page(
     request: Request,
     user: CurrentUserOptional,
@@ -280,6 +281,7 @@ async def login_page(
 
     context = get_base_context(request, user)
     context["redirect_url"] = redirect or "/"
+    context["config"] = settings
 
     return templates.TemplateResponse("auth/login.html", context)
 

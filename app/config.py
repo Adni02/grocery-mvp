@@ -15,8 +15,8 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    # Database
-    database_url: str = "postgresql+asyncpg://grocery:grocery_dev_password@localhost:5432/grocery_mvp"
+    # Database (SQLite for development, PostgreSQL for production)
+    database_url: str = "sqlite+aiosqlite:///./grocery_mvp.db"
 
     # Security
     secret_key: str = "dev-secret-key-change-in-production"

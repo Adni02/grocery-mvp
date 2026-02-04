@@ -1,43 +1,38 @@
-"""Cart model for persisting user carts."""
+"""Cart model for shopping cart functionality."""
 
 import uuid
-from datetime import datetime
-from decimal import Decimal
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models import Base
+from app.models import Base, TimestampMixin, GUID
+
+if TYPE_CHECKING:
+    from app.models.product import Product
+    from app.models.user import User
 
 
-class Cart(Base):
+class Cart(Base, TimestampMixin):
     """Shopping cart model."""
 
     __tablename__ = "carts"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
-        unique=True,
-        nullable=False,
+        nullable=True,
         index=True,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
+    session_id: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+        index=True,
     )
 
     # Relationships
@@ -49,67 +44,49 @@ class Cart(Base):
     )
 
     @property
-    def subtotal(self) -> Decimal:
-        """Calculate cart subtotal."""
-        return sum((item.line_total for item in self.items), Decimal("0.00"))
-
-    @property
     def item_count(self) -> int:
         """Total number of items in cart."""
         return sum(item.quantity for item in self.items)
 
+    @property
+    def subtotal(self) -> float:
+        """Calculate cart subtotal."""
+        return sum(
+            float(item.product.price) * item.quantity
+            for item in self.items
+            if item.product
+        )
+
     def __repr__(self) -> str:
-        return f"<Cart user={self.user_id} items={len(self.items)}>"
+        return f"<Cart {self.id} ({self.item_count} items)>"
 
 
-class CartItem(Base):
-    """Cart line item model."""
+class CartItem(Base, TimestampMixin):
+    """Cart item model."""
 
     __tablename__ = "cart_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )
     cart_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("carts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     product_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
     )
-    quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
 
     # Relationships
     cart: Mapped["Cart"] = relationship("Cart", back_populates="items")
     product: Mapped["Product"] = relationship("Product", lazy="selectin")
 
-    @property
-    def line_total(self) -> Decimal:
-        """Calculate line total based on current product price."""
-        if self.product:
-            return self.product.price * self.quantity
-        return Decimal("0.00")
-
     def __repr__(self) -> str:
-        return f"<CartItem product={self.product_id} qty={self.quantity}>"
-
-
-# Import Product for relationship - avoid circular import
-from app.models.product import Product  # noqa: E402
+        return f"<CartItem {self.product_id} x{self.quantity}>"

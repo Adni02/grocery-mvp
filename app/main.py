@@ -1,5 +1,6 @@
 """Main FastAPI application."""
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -10,6 +11,19 @@ from app.api import api_router
 from app.config import settings
 from app.pages import page_router
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler - runs on startup and shutdown."""
+    # Startup: Initialize database tables
+    from app.database import init_db
+    await init_db()
+    print("✓ Database initialized")
+    yield
+    # Shutdown: cleanup if needed
+    print("Shutting down...")
+
+
 # Create FastAPI app
 app = FastAPI(
     title=settings.app_name,
@@ -17,6 +31,7 @@ app = FastAPI(
     description="Danish Online Grocery Marketplace - Phase 1 MVP",
     docs_url="/api/docs" if settings.is_development else None,
     redoc_url="/api/redoc" if settings.is_development else None,
+    lifespan=lifespan,
 )
 
 # Get base directory

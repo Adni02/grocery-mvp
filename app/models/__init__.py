@@ -4,9 +4,44 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, String, Text, func
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column
+from sqlalchemy.types import TypeDecorator, CHAR
+from sqlalchemy import JSON
+
+
+class GUID(TypeDecorator):
+    """Platform-independent GUID type that uses PostgreSQL's UUID 
+    or CHAR(36) for other databases."""
+    impl = CHAR
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(PG_UUID(as_uuid=True))
+        else:
+            return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return value
+        else:
+            return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            if isinstance(value, uuid.UUID):
+                return value
+            return uuid.UUID(value)
+
+
+# Portable JSON type - uses JSONB on PostgreSQL, JSON on others
+PortableJSON = JSON
 
 
 class Base(DeclarativeBase):
@@ -38,7 +73,7 @@ class UUIDMixin:
     """Mixin that adds a UUID primary key."""
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
     )

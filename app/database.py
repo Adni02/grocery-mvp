@@ -6,14 +6,23 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.config import settings
 
-# Create async engine
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-)
+# Determine if using SQLite
+is_sqlite = settings.database_url.startswith("sqlite")
+
+# Create async engine with appropriate settings
+engine_kwargs = {
+    "echo": settings.debug,
+}
+
+if not is_sqlite:
+    # PostgreSQL specific settings
+    engine_kwargs.update({
+        "pool_pre_ping": True,
+        "pool_size": 5,
+        "max_overflow": 10,
+    })
+
+engine = create_async_engine(settings.database_url, **engine_kwargs)
 
 # Create async session factory
 async_session_factory = async_sessionmaker(
@@ -23,6 +32,16 @@ async_session_factory = async_sessionmaker(
     autocommit=False,
     autoflush=False,
 )
+
+# Alias for scripts
+async_session_maker = async_session_factory
+
+
+async def init_db():
+    """Initialize database tables."""
+    from app.models import Base
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
